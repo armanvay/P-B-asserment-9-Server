@@ -69,7 +69,7 @@ async function run() {
       res.json(result);
     });
     // detisl page
-    app.get("/ideas/:ideasId", async (req, res) => {
+    app.get("/ideas/:ideasId", async (req, res) => { 
       const { ideasId } = req.params;
       const result = await ideaCollection.findOne({
         _id: new ObjectId(ideasId),
