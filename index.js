@@ -34,10 +34,31 @@ async function run() {
     // await client.db("admin").command({ ping: 1 });
 
     // all data get kora
-    app.get("/ideas", async (req, res) => {
-      const result = await ideaCollection.find().toArray();
-      res.json(result);
-    });
+      app.get("/ideas", async (req, res) => {
+        try {
+          const { search, category } = req.query;
+
+          let query = {};
+
+          //  Search by title (case-insensitive)
+          if (search) {
+            query.title = {
+              $regex: search,
+              $options: "i",
+            };
+          }
+
+          //  Category filter
+          if (category) {
+            query.category = category;
+          }
+
+          const result = await ideaCollection.find(query).toArray();
+          res.send(result);
+        } catch (error) {
+          res.status(500).send({ message: error.message });
+        }
+      });
     //Trending Ideas Section
     app.get("/tending", async (req, res) => {
       const result = await ideaCollection
