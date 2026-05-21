@@ -23,6 +23,25 @@ const client = new MongoClient(uri, {
   },
 });
 
+const verifyToken = (req, res, next) => {
+  const authheader = req?.headers.authorization;
+ if (!authheader) {
+   return res.status(401).send({
+     message: "Unauthorized access",
+   });
+ }
+
+  const token =authheader.split(" ")[1]
+
+  if(!token){
+     return res.status(401).send({
+       message: "Unauthorized access",
+     });
+  }
+  console.log(token);
+  next();
+};
+
 async function run() {
   try {
     await client.connect();
@@ -34,31 +53,31 @@ async function run() {
     // await client.db("admin").command({ ping: 1 });
 
     // all data get kora
-      app.get("/ideas", async (req, res) => {
-        try {
-          const { search, category } = req.query;
+    app.get("/ideas", async (req, res) => {
+      try {
+        const { search, category } = req.query;
 
-          let query = {};
+        let query = {};
 
-          //  Search by title (case-insensitive)
-          if (search) {
-            query.title = {
-              $regex: search,
-              $options: "i",
-            };
-          }
-
-          //  Category filter
-          if (category) {
-            query.category = category;
-          }
-
-          const result = await ideaCollection.find(query).toArray();
-          res.send(result);
-        } catch (error) {
-          res.status(500).send({ message: error.message });
+        //  Search by title (case-insensitive)
+        if (search) {
+          query.title = {
+            $regex: search,
+            $options: "i",
+          };
         }
-      });
+
+        //  Category filter
+        if (category) {
+          query.category = category;
+        }
+
+        const result = await ideaCollection.find(query).toArray();
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: error.message });
+      }
+    });
     //Trending Ideas Section
     app.get("/tending", async (req, res) => {
       const result = await ideaCollection
@@ -69,7 +88,7 @@ async function run() {
       res.json(result);
     });
     // detisl page
-    app.get("/ideas/:ideasId", async (req, res) => { 
+    app.get("/ideas/:ideasId",verifyToken ,async (req, res) => {
       const { ideasId } = req.params;
       const result = await ideaCollection.findOne({
         _id: new ObjectId(ideasId),
@@ -99,7 +118,7 @@ async function run() {
       res.send(result);
     });
 
-    // Update my idea 
+    // Update my idea
     app.patch("/ideas/:id", async (req, res) => {
       const { id } = req.params;
       const updatedData = req.body;
@@ -118,6 +137,7 @@ async function run() {
       const result = await commentCollection.insertOne(commentData);
       res.send(result);
     });
+
     //comments  show in My Interactions
     app.get("/my-comments/:email", async (req, res) => {
       const { email } = req.params;
