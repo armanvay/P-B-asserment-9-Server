@@ -47,7 +47,6 @@ const verifyToken = async (req, res, next) => {
 
   try {
     const { payload } = await jwtVerify(token, JWKS);
-
     console.log(payload);
 
     next();
@@ -63,7 +62,7 @@ const verifyToken = async (req, res, next) => {
 async function run() {
   try {
     // await client.connect();
-    
+
     const db = client.db("ideaVaultAll");
     const ideaCollection = db.collection("ideas");
     const commentCollection = db.collection("comments");
@@ -122,7 +121,7 @@ async function run() {
       res.json(result);
     });
     //My Ideas GET Route
-    app.get("/my-ideas/:email", async (req, res) => {
+    app.get("/my-ideas/:email",verifyToken, async (req, res) => {
       const { email } = req.params;
       const result = await ideaCollection.find({ userEmail: email }).toArray();
       res.send(result);
